@@ -59,5 +59,5 @@ poetry publish
 To publish the release to Github, run:
 
 ```bash
-gh release create 0.2.0 dist/*
+gh release create 0.4.0 dist/*
 ```

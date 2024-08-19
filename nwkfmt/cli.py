@@ -26,10 +26,7 @@ def recursive_print(
     for pos, subclade in enumerate(clade):
         string = recursive_print(subclade, string, indent + 1, pos == len(clade) - 1)
     string.append(
-        "  " * indent
-        + ")"
-        + (clade.name or f"internal_{str(uuid4())[0:8]}")
-        + ("," if not last else "")
+        "  " * indent + ")" + (clade.name or f"internal_{str(uuid4())[0:8]}") + ("," if not last else "")
     )
     return string
 
@@ -79,7 +76,8 @@ def test(  # noqa: C901, PLR0912
         for clade in tree.find_clades():
             # Check for redundant internal nodes
             if not clade.is_terminal() and len(clade.clades) == 1:
-                msg = f"Redundant internal node detected named `{clade.name}` after `{clade_names[-1]}`"
+                previous_clade = clade_names[-1] if clade_names else "root"
+                msg = f"Redundant internal node detected named `{clade.name}` after `{previous_clade}`"
                 raise Exception(msg)
             if clade.name is None:
                 if clade.is_terminal():
