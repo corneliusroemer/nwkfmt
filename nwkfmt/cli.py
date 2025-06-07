@@ -19,7 +19,8 @@ def recursive_print(
     if string is None:
         string = []
     if clade.is_terminal():
-        string.append("  " * indent + clade.name + ("," if not last else ""))
+        clade_name = clade.name or ""
+        string.append("  " * indent + clade_name + ("," if not last else ""))
         return string
     string.append("  " * indent + "(")
 
@@ -47,6 +48,7 @@ def test(  # noqa: C901, PLR0912
     inplace: bool = typer.Option(False, help="Overwrite input file"),
     terminals=typer.Option(None, help="Output path for list of tip names"),  # noqa: B008
     internals=typer.Option(None, help="Output path for list of internal node names"),  # noqa: B008
+    validate: bool = typer.Option(True, help="Validate the Newick file"),  # noqa: B008
 ):
     file_content = Path(file).read_text(encoding="utf-8")
     regex = r"[^ ()\s,]\s+[^ ()\s,;]"
@@ -69,28 +71,34 @@ def test(  # noqa: C901, PLR0912
                     break
         print("\nERROR: Invalid input Newick, clade name(s) contain(s) whitespace")
         raise typer.Exit(1)
+    
+    errors = []
 
     trees: list[BaseTree.Tree] = list(Phylo.parse(file, "newick"))
     for tree in trees:
-        clade_names = []
+        clade_names: list[str] = []
         for clade in tree.find_clades():
             # Check for redundant internal nodes
             if not clade.is_terminal() and len(clade.clades) == 1:
                 previous_clade = clade_names[-1] if clade_names else "root"
-                msg = f"Redundant internal node detected named `{clade.name}` after `{previous_clade}`"
-                raise Exception(msg)
+                errors.append(f"Redundant internal node detected named `{clade.name}` after `{previous_clade}`")
+
             if clade.name is None:
                 if clade.is_terminal():
-                    msg = f"Terminal clade without name detected after {clade_names[-1]}"
-                    raise Exception(msg)
+                    errors.append(f"Terminal clade without name detected after {clade_names[-1]}")
                 continue
             if not clade.name.strip():
-                msg = f"White space only name detected for clade `{clade.name}` after {clade_names[-1]}"
-                raise Exception(msg)
+                errors.append(f"White space only name detected for clade `{clade.name}` after {clade_names[-1]}")
             if clade.name in clade_names:
-                msg = f"Duplicate name {clade.name} detected"
-                raise Exception(msg)
+                errors.append(f"Duplicate name {clade.name} detected after {clade_names[-1]}")
             clade_names.append(clade.name)
+        
+        if errors:
+            print("\nERROR: Problematic input Newick, the following issues were detected:")
+            for error in errors:
+                print(f"  {error}")
+            if validate:
+                raise typer.Exit(1)
 
         if inplace:
             outfile = file

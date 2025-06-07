@@ -8,6 +8,14 @@ IQtree2 can throw hard to understand errors when using constraint trees even if 
 
 This utility will catch many of those errors and provide a more detailed error message.
 
+## Installation
+
+You can install the utility using pip:
+
+```bash
+pip install nwkfmt
+```
+
 ## Usage
 
 Validation without formatting:
@@ -34,11 +42,11 @@ Outputting list of terminal nodes into a text file:
 ./main.py <tree.nwk> --terminals <terminals.txt>
 ```
 
-## Requirements
+Formatting even if validation fails:
 
-- Python
-- Typer
-- BioPython
+```bash
+./main.py <tree.nwk> --inplace --no-validate
+```
 
 ## Release
 
@@ -59,5 +67,5 @@ poetry publish
 To publish the release to Github, run:
 
 ```bash
-gh release create 0.4.0 dist/*
+gh release create 0.4.1 dist/*
 ```
